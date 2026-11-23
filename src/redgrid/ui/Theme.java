@@ -101,9 +101,8 @@ public final class Theme {
         c.setFont(sans(Font.PLAIN, 14));
         c.setBackground(SURFACE);
         c.setForeground(INK);
-        c.setBorder(fieldBorder());
-        c.setPreferredSize(new Dimension(300, 46));
-        c.setMaximumSize(new Dimension(Integer.MAX_VALUE, 46));
+        c.setPreferredSize(new Dimension(300, 42));
+        c.setMaximumSize(new Dimension(Integer.MAX_VALUE, 42));
         return c;
     }
 

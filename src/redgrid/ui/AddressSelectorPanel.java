@@ -8,19 +8,12 @@ import redgrid.model.location.Upazila;
 import redgrid.service.LocationDataManager;
 
 import javax.swing.*;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.util.List;
 
 /**
- * Reusable cascading dropdown panel for selecting Bangladesh addresses:
- * District -> Upazila -> Union -> Postcode.
- * Features:
- * - Clear placeholders like "-- Select District --"
- * - Spacious vertical box heights (46px) with clean typography
- * - Clean borders and comfortable padding
+ * Reusable cascading dropdown panel for selecting location:
+ * District -> Upazila -> Union -> Postcode -> Hospital / Clinic.
  */
 public class AddressSelectorPanel extends JPanel {
 
@@ -29,30 +22,27 @@ public class AddressSelectorPanel extends JPanel {
     private final JComboBox<Object> unionCombo = new JComboBox<>();
     private final JComboBox<Object> postcodeCombo = new JComboBox<>();
     private final JTextField hospitalField = Theme.textField();
-    private final JLabel hospitalLabel;
     private final boolean showHospitalField;
 
-    private static final String PLACEHOLDER_DISTRICT = "-- Select District (জেলা নির্বাচন করুন) --";
-    private static final String PLACEHOLDER_UPAZILA  = "-- Select Upazila / Thana (উপজেলা নির্বাচন করুন) --";
-    private static final String PLACEHOLDER_UNION    = "-- Select Union / Ward (ইউনিয়ন নির্বাচন করুন) --";
-    private static final String PLACEHOLDER_POSTCODE = "-- Select Postcode (পোস্ট কোড) --";
+    private static final String PLACEHOLDER_DISTRICT = "-- Select District --";
+    private static final String PLACEHOLDER_UPAZILA  = "-- Select Upazila / Thana --";
+    private static final String PLACEHOLDER_UNION    = "-- Select Union / Ward --";
+    private static final String PLACEHOLDER_POSTCODE = "-- Select Postcode --";
 
     public AddressSelectorPanel(boolean showHospitalField, String hospitalLabelText) {
         this.showHospitalField = showHospitalField;
-        this.hospitalLabel = Theme.label(hospitalLabelText != null ? hospitalLabelText : "Hospital / Clinic name",
-                Theme.sans(Font.BOLD, 13), Theme.INK);
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setOpaque(false);
 
         setupComboBoxStyles();
-        buildUI();
+        buildUI(hospitalLabelText != null ? hospitalLabelText : "Hospital / Clinic Name");
         initListeners();
         loadDistricts();
     }
 
     public AddressSelectorPanel(boolean showHospitalField) {
-        this(showHospitalField, "Hospital / Clinic name");
+        this(showHospitalField, "Hospital / Clinic Name");
     }
 
     private void setupComboBoxStyles() {
@@ -66,44 +56,35 @@ public class AddressSelectorPanel extends JPanel {
         box.setFont(Theme.sans(Font.PLAIN, 14));
         box.setBackground(Theme.SURFACE);
         box.setForeground(Theme.INK);
-        box.setPreferredSize(new Dimension(300, 46));
-        box.setMaximumSize(new Dimension(Integer.MAX_VALUE, 46));
-        box.setMinimumSize(new Dimension(200, 46));
+        box.setPreferredSize(new Dimension(300, 42));
+        box.setMaximumSize(new Dimension(Integer.MAX_VALUE, 42));
         box.setAlignmentX(Component.LEFT_ALIGNMENT);
-        box.setBorder(new CompoundBorder(
-            new LineBorder(Theme.LINE_STRONG, 1),
-            new EmptyBorder(4, 8, 4, 8)
-        ));
     }
 
-    private void buildUI() {
-        add(createSectionLabel("District (জেলা) *"));
+    private void buildUI(String hospitalLabelText) {
+        add(createSectionLabel("District *"));
         add(Box.createVerticalStrut(6));
         add(districtCombo);
         add(Box.createVerticalStrut(14));
 
-        add(createSectionLabel("Upazila / Thana (উপজেলা/থানা) *"));
+        add(createSectionLabel("Upazila / Thana *"));
         add(Box.createVerticalStrut(6));
         add(upazilaCombo);
         add(Box.createVerticalStrut(14));
 
-        add(createSectionLabel("Union / Ward (ইউনিয়ন/ওয়ার্ড)"));
+        add(createSectionLabel("Union / Ward (Optional)"));
         add(Box.createVerticalStrut(6));
         add(unionCombo);
         add(Box.createVerticalStrut(14));
 
-        add(createSectionLabel("Postcode (পোস্ট কোড)"));
+        add(createSectionLabel("Postcode (Optional)"));
         add(Box.createVerticalStrut(6));
         add(postcodeCombo);
 
         if (showHospitalField) {
             add(Box.createVerticalStrut(14));
-            add(createSectionLabel("Hospital / Clinic Name *"));
+            add(createSectionLabel(hospitalLabelText + " *"));
             add(Box.createVerticalStrut(6));
-            hospitalField.setFont(Theme.sans(Font.PLAIN, 14));
-            hospitalField.setPreferredSize(new Dimension(300, 46));
-            hospitalField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 46));
-            hospitalField.setMinimumSize(new Dimension(200, 46));
             hospitalField.setAlignmentX(Component.LEFT_ALIGNMENT);
             add(hospitalField);
         }
@@ -127,12 +108,14 @@ public class AddressSelectorPanel extends JPanel {
         for (District d : list) {
             districtCombo.addItem(d);
         }
+        districtCombo.setSelectedIndex(0);
         resetUpazilas();
     }
 
     private void resetUpazilas() {
         upazilaCombo.removeAllItems();
         upazilaCombo.addItem(PLACEHOLDER_UPAZILA);
+        upazilaCombo.setSelectedIndex(0);
         resetUnions();
         resetPostcodes();
     }
@@ -140,11 +123,13 @@ public class AddressSelectorPanel extends JPanel {
     private void resetUnions() {
         unionCombo.removeAllItems();
         unionCombo.addItem(PLACEHOLDER_UNION);
+        unionCombo.setSelectedIndex(0);
     }
 
     private void resetPostcodes() {
         postcodeCombo.removeAllItems();
         postcodeCombo.addItem(PLACEHOLDER_POSTCODE);
+        postcodeCombo.setSelectedIndex(0);
     }
 
     private void onDistrictSelected() {
@@ -186,6 +171,7 @@ public class AddressSelectorPanel extends JPanel {
         for (Postcode p : list) {
             postcodeCombo.addItem(p);
         }
+        postcodeCombo.setSelectedIndex(0);
     }
 
     // ---------- Public Getters ----------

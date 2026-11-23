@@ -165,28 +165,24 @@ public class Dashboard extends JFrame {
     // ---------- request tab ----------
 
     private JPanel requestTab() {
-        String[] labels = new String[]{"-- Select Blood Group (রক্তের গ্রুপ) --", "O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+"};
+        String[] labels = new String[]{"-- Select Blood Group --", "O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+"};
         JComboBox<String> group = Theme.comboBox(labels);
         group.setSelectedIndex(0);
 
         SpinnerNumberModel bagsModel = new SpinnerNumberModel(1, 1, 10, 1);
         JSpinner bags = new JSpinner(bagsModel);
         bags.setFont(Theme.sans(Font.PLAIN, 14));
-        bags.setPreferredSize(new Dimension(300, 46));
-        bags.setMaximumSize(new Dimension(Integer.MAX_VALUE, 46));
-        bags.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(Theme.LINE_STRONG, 1),
-            BorderFactory.createEmptyBorder(4, 10, 4, 10)
-        ));
+        bags.setPreferredSize(new Dimension(300, 42));
+        bags.setMaximumSize(new Dimension(Integer.MAX_VALUE, 42));
 
-        AddressSelectorPanel addressSelector = new AddressSelectorPanel(true, "Hospital / Clinic name");
+        AddressSelectorPanel addressSelector = new AddressSelectorPanel(true, "Hospital / Clinic Name");
 
-        JCheckBox urgent = new JCheckBox("Urgent (life-threatening condition)");
+        JCheckBox urgent = new JCheckBox("Urgent (Critical / Emergency requirement)");
         urgent.setFont(Theme.sans(Font.BOLD, 14));
         urgent.setBackground(Theme.SURFACE);
         urgent.setForeground(Theme.ACCENT);
-        JButton submit = Theme.button("Broadcast Blood Request", true);
-        submit.setPreferredSize(new Dimension(240, 48));
+        JButton submit = Theme.button("Broadcast Request", true);
+        submit.setPreferredSize(new Dimension(240, 46));
 
         submit.addActionListener(e -> {
             if (group.getSelectedIndex() <= 0) {
@@ -196,11 +192,11 @@ public class Dashboard extends JFrame {
 
             redgrid.model.location.Address addr = addressSelector.getSelectedAddress();
             if (addr.getDistrict().isEmpty()) {
-                ThemeKits.error(this, "Please select a district (জেলা নির্বাচন করুন).");
+                ThemeKits.error(this, "Please select a district.");
                 return;
             }
             if (addr.getUpazila().isEmpty()) {
-                ThemeKits.error(this, "Please select an upazila / thana (উপজেলা নির্বাচন করুন).");
+                ThemeKits.error(this, "Please select an upazila / thana.");
                 return;
             }
             if (addr.getHospitalOrDetail().isEmpty()) {
