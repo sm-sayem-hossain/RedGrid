@@ -38,7 +38,7 @@ public class Dashboard extends JFrame {
         setLocationRelativeTo(null);
 
         JComponent tabs = TabStrip.build(
-            new String[]{"Overview", "Blood request", "Profile & location"},
+            new String[]{"Overview", "Blood Request", "Profile"},
             new JComponent[]{overviewTab(), requestTab(), profileTab()});
 
         JPanel root = Theme.panel(Theme.BG);
@@ -245,40 +245,44 @@ public class Dashboard extends JFrame {
         // --- PREVIEW MODE PANEL ---
         JPanel previewCard = ThemeKits.card("User Profile");
 
-        // Identity Header Box
-        JPanel idBox = Theme.panel(Theme.BG_SOFT);
-        idBox.setLayout(new BorderLayout());
-        idBox.setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
+        // Identity Badge + Basic info row
+        JPanel idRow = Theme.panel(Theme.SURFACE);
+        idRow.setLayout(new FlowLayout(FlowLayout.LEFT, 16, 0));
+        idRow.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel bloodBadge = Theme.label(me.getBloodGroup().label(), Theme.display(Font.BOLD, 28), Theme.ACCENT);
-        bloodBadge.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 18));
-        idBox.add(bloodBadge, BorderLayout.WEST);
+        JLabel bloodBadge = Theme.label(me.getBloodGroup().label(), Theme.display(Font.BOLD, 32), Theme.ACCENT);
+        idRow.add(bloodBadge);
 
-        JLabel nameLabel = Theme.label(me.getName(), Theme.sans(Font.BOLD, 18), Theme.INK);
-        JLabel metaLabel = Theme.label("ID: " + me.getId() + "  ·  Phone: " + me.getPhone() + "  ·  Role: " + me.getRole(),
-                Theme.mono(12), Theme.DIM);
-        JPanel nameBox = Theme.panel(Theme.BG_SOFT);
+        JPanel nameBox = Theme.panel(Theme.SURFACE);
         nameBox.setLayout(new BoxLayout(nameBox, BoxLayout.Y_AXIS));
+        JLabel nameLabel = Theme.label(me.getName(), Theme.sans(Font.BOLD, 17), Theme.INK);
+        JLabel metaLabel = Theme.label("ID: " + me.getId() + "  ·  " + me.getRole(), Theme.mono(12), Theme.DIM);
         nameBox.add(nameLabel);
-        nameBox.add(Box.createVerticalStrut(4));
+        nameBox.add(Box.createVerticalStrut(2));
         nameBox.add(metaLabel);
-        idBox.add(nameBox, BorderLayout.CENTER);
-        previewCard.add(idBox);
+        idRow.add(nameBox);
+
+        previewCard.add(idRow);
         previewCard.add(Box.createVerticalStrut(20));
 
-        // Details Section
+        // Details list
         JLabel pName = Theme.label("Full Name:  " + me.getName(), Theme.sans(Font.PLAIN, 14), Theme.INK);
+        pName.setAlignmentX(Component.LEFT_ALIGNMENT);
         JLabel pPhone = Theme.label("Phone Number:  " + me.getPhone(), Theme.sans(Font.PLAIN, 14), Theme.INK);
+        pPhone.setAlignmentX(Component.LEFT_ALIGNMENT);
         JLabel pBlood = Theme.label("Blood Group:  " + me.getBloodGroup().label(), Theme.sans(Font.PLAIN, 14), Theme.INK);
+        pBlood.setAlignmentX(Component.LEFT_ALIGNMENT);
         JLabel pAddress = Theme.label(
             "Registered Location:  " + (me.getFullAddress() != null ? me.getFullAddress().toString() : "No location set yet"),
             Theme.sans(Font.PLAIN, 14), Theme.INK
         );
+        pAddress.setAlignmentX(Component.LEFT_ALIGNMENT);
         JLabel pStatus = Theme.label(
             "Donation Status:  " + (me.isEligible() ? "Eligible to Donate" : ("Cooldown (" + me.daysUntilEligible() + " days left)")),
             Theme.sans(Font.BOLD, 14),
             me.isEligible() ? Theme.SUCCESS : Theme.ACCENT
         );
+        pStatus.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         previewCard.add(pName);
         previewCard.add(Box.createVerticalStrut(10));
@@ -289,10 +293,11 @@ public class Dashboard extends JFrame {
         previewCard.add(pAddress);
         previewCard.add(Box.createVerticalStrut(10));
         previewCard.add(pStatus);
-        previewCard.add(Box.createVerticalStrut(24));
+        previewCard.add(Box.createVerticalStrut(22));
 
         JButton editBtn = Theme.button("Edit Profile", true);
-        editBtn.setPreferredSize(new Dimension(150, 42));
+        editBtn.setPreferredSize(new Dimension(140, 42));
+        editBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
         previewCard.add(editBtn);
 
         JPanel previewBody = Theme.panel(Theme.BG);
@@ -333,6 +338,7 @@ public class Dashboard extends JFrame {
 
         JPanel btnRow = Theme.panel(Theme.SURFACE);
         btnRow.setLayout(new FlowLayout(FlowLayout.LEFT, 12, 0));
+        btnRow.setAlignmentX(Component.LEFT_ALIGNMENT);
         btnRow.add(saveBtn);
         btnRow.add(cancelBtn);
         editCard.add(btnRow);
@@ -387,7 +393,7 @@ public class Dashboard extends JFrame {
 
             // Update preview labels
             nameLabel.setText(me.getName());
-            metaLabel.setText("ID: " + me.getId() + "  ·  Phone: " + me.getPhone() + "  ·  Role: " + me.getRole());
+            metaLabel.setText("ID: " + me.getId() + "  ·  " + me.getRole());
             bloodBadge.setText(me.getBloodGroup().label());
             pName.setText("Full Name:  " + me.getName());
             pPhone.setText("Phone Number:  " + me.getPhone());

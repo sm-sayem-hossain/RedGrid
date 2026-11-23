@@ -32,6 +32,7 @@ public final class TabStrip {
         for (int i = 0; i < labels.length; i++) {
             final int idx = i;
             JButton b = Theme.button(labels[i], i == 0);
+            b.setPreferredSize(new Dimension(170, 42));
             b.addActionListener(e -> {
                 for (int j = 0; j < buttons.length; j++) applyStyle(buttons[j], j == idx);
                 cards.show(deck, "page" + idx);
