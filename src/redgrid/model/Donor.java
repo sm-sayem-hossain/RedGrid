@@ -13,7 +13,8 @@ public class Donor extends User implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private BloodGroup bloodGroup;
-    private LocalDate lastDonation; // null = never donated
+    private LocalDate lastDonation;      // null = never donated
+    private boolean availableAsDonor;    // user must explicitly opt-in to receive alerts
 
     public Donor(String id, String name, String phone, String password,
                  String district, BloodGroup bloodGroup) {
@@ -23,6 +24,10 @@ public class Donor extends User implements Serializable {
 
     public BloodGroup getBloodGroup()  { return bloodGroup; }
     public void setBloodGroup(BloodGroup g) { this.bloodGroup = g; }
+
+    /** Whether the user has opted in to being a donor and receiving emergency alerts. */
+    public boolean isAvailableAsDonor() { return availableAsDonor; }
+    public void setAvailableAsDonor(boolean available) { this.availableAsDonor = available; }
 
     public LocalDate getLastDonation() { return lastDonation; }
 

@@ -286,6 +286,14 @@ public class Dashboard extends JFrame {
         );
         pStatus.setAlignmentX(Component.LEFT_ALIGNMENT);
 
+        // Show whether donor alerts are active
+        String donorStatusText = me.isAvailableAsDonor()
+            ? "Donor Alerts:  Active — you will receive emergency alerts"
+            : "Donor Alerts:  Off — enable in Edit Profile to receive alerts";
+        JLabel pDonorStatus = Theme.label(donorStatusText, Theme.sans(Font.PLAIN, 13),
+            me.isAvailableAsDonor() ? Theme.SUCCESS : Theme.DIM);
+        pDonorStatus.setAlignmentX(Component.LEFT_ALIGNMENT);
+
         previewCard.add(pName);
         previewCard.add(Box.createVerticalStrut(10));
         previewCard.add(pPhone);
@@ -295,6 +303,8 @@ public class Dashboard extends JFrame {
         previewCard.add(pAddress);
         previewCard.add(Box.createVerticalStrut(10));
         previewCard.add(pStatus);
+        previewCard.add(Box.createVerticalStrut(6));
+        previewCard.add(pDonorStatus);
         previewCard.add(Box.createVerticalStrut(22));
 
         JButton editBtn = Theme.button("Edit Profile", true);
@@ -327,6 +337,16 @@ public class Dashboard extends JFrame {
         ThemeKits.formRow(editCard, "Phone Number *", phoneField);
         ThemeKits.formRow(editCard, "Blood Group *", bloodCombo);
 
+        // Donor opt-in checkbox
+        JCheckBox donorToggle = new JCheckBox("Available as Donor — receive emergency blood requests near me");
+        donorToggle.setFont(Theme.sans(Font.BOLD, 13));
+        donorToggle.setBackground(Theme.SURFACE);
+        donorToggle.setForeground(Theme.INK);
+        donorToggle.setAlignmentX(Component.LEFT_ALIGNMENT);
+        donorToggle.setSelected(me.isAvailableAsDonor());
+        editCard.add(Box.createVerticalStrut(8));
+        editCard.add(donorToggle);
+
         editCard.add(Box.createVerticalStrut(6));
         AddressSelectorPanel addressSelector = new AddressSelectorPanel(false);
         editCard.add(addressSelector);
@@ -356,6 +376,7 @@ public class Dashboard extends JFrame {
             nameField.setText(me.getName());
             phoneField.setText(me.getPhone());
             bloodCombo.setSelectedItem(me.getBloodGroup().label());
+            donorToggle.setSelected(me.isAvailableAsDonor());
             cardLayout.show(container, "edit");
         });
 
@@ -379,6 +400,7 @@ public class Dashboard extends JFrame {
             me.setName(newName);
             me.setPhone(newPhone);
             me.setBloodGroup(newBg);
+            me.setAvailableAsDonor(donorToggle.isSelected());
 
             redgrid.model.location.Address addr = addressSelector.getSelectedAddress();
             if (addr != null && !addr.getDistrict().isEmpty()) {
@@ -401,6 +423,10 @@ public class Dashboard extends JFrame {
             pPhone.setText("Phone Number:  " + me.getPhone());
             pBlood.setText("Blood Group:  " + me.getBloodGroup().label());
             pAddress.setText("Registered Location:  " + (me.getFullAddress() != null ? me.getFullAddress().toString() : "No location set yet"));
+            pDonorStatus.setText(me.isAvailableAsDonor()
+                ? "Donor Alerts:  Active — you will receive emergency alerts"
+                : "Donor Alerts:  Off — enable in Edit Profile to receive alerts");
+            pDonorStatus.setForeground(me.isAvailableAsDonor() ? Theme.SUCCESS : Theme.DIM);
 
             ThemeKits.info(this, "Profile updated successfully!");
             cardLayout.show(container, "preview");

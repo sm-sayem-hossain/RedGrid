@@ -25,6 +25,7 @@ public final class MatchingEngine {
     public static List<Donor> findDonors(BloodRequest req) {
         List<Donor> result = new ArrayList<>();
         for (Donor d : Store.donors()) {
+            if (!d.isAvailableAsDonor()) continue;           // skip users who haven't opted in
             if (!evaluateABO_Rh(d.getBloodGroup(), req.getBloodGroup())) continue;
             if (!EligibilityValidator.check90Days(d)) continue;
             if (d.getLocation() == null || req.getLocation() == null) continue;
