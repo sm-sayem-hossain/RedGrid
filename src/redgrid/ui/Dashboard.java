@@ -245,22 +245,24 @@ public class Dashboard extends JFrame {
         // --- PREVIEW MODE PANEL ---
         JPanel previewCard = ThemeKits.card("User Profile");
 
-        // Identity Badge + Basic info row
+        // Identity Badge + Basic info row (BorderLayout keeps height tight in BoxLayout card)
         JPanel idRow = Theme.panel(Theme.SURFACE);
-        idRow.setLayout(new FlowLayout(FlowLayout.LEFT, 16, 0));
+        idRow.setLayout(new BorderLayout(16, 0));
         idRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+        idRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 56));
 
         JLabel bloodBadge = Theme.label(me.getBloodGroup().label(), Theme.display(Font.BOLD, 32), Theme.ACCENT);
-        idRow.add(bloodBadge);
+        idRow.add(bloodBadge, BorderLayout.WEST);
 
         JPanel nameBox = Theme.panel(Theme.SURFACE);
         nameBox.setLayout(new BoxLayout(nameBox, BoxLayout.Y_AXIS));
+        nameBox.setAlignmentY(Component.CENTER_ALIGNMENT);
         JLabel nameLabel = Theme.label(me.getName(), Theme.sans(Font.BOLD, 17), Theme.INK);
         JLabel metaLabel = Theme.label("ID: " + me.getId() + "  ·  " + me.getRole(), Theme.mono(12), Theme.DIM);
         nameBox.add(nameLabel);
         nameBox.add(Box.createVerticalStrut(2));
         nameBox.add(metaLabel);
-        idRow.add(nameBox);
+        idRow.add(nameBox, BorderLayout.CENTER);
 
         previewCard.add(idRow);
         previewCard.add(Box.createVerticalStrut(20));
