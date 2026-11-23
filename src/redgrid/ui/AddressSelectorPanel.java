@@ -24,10 +24,10 @@ public class AddressSelectorPanel extends JPanel {
     private final JTextField hospitalField = Theme.textField();
     private final boolean showHospitalField;
 
-    private static final String PLACEHOLDER_DISTRICT = "-- Select District --";
-    private static final String PLACEHOLDER_UPAZILA  = "-- Select Upazila / Thana --";
-    private static final String PLACEHOLDER_UNION    = "-- Select Union / Ward --";
-    private static final String PLACEHOLDER_POSTCODE = "-- Select Postcode --";
+    private static final String PLACEHOLDER_DISTRICT = "Select District";
+    private static final String PLACEHOLDER_UPAZILA  = "Select Upazila / Thana";
+    private static final String PLACEHOLDER_UNION    = "Select Union / Ward";
+    private static final String PLACEHOLDER_POSTCODE = "Select Postcode";
 
     public AddressSelectorPanel(boolean showHospitalField, String hospitalLabelText) {
         this.showHospitalField = showHospitalField;

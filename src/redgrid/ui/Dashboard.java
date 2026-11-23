@@ -119,10 +119,7 @@ public class Dashboard extends JFrame {
         body.add(Box.createVerticalStrut(20));
         body.add(reqCard);
 
-        JScrollPane outer = new JScrollPane(body);
-        outer.setBorder(null);
-        outer.getVerticalScrollBar().setUnitIncrement(16);
-        return wrapTab(outer);
+        return wrapTab(body);
     }
 
     private void refreshStatus() {
@@ -165,7 +162,7 @@ public class Dashboard extends JFrame {
     // ---------- request tab ----------
 
     private JPanel requestTab() {
-        String[] labels = new String[]{"-- Select Blood Group --", "O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+"};
+        String[] labels = new String[]{"Select Blood Group", "O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+"};
         JComboBox<String> group = Theme.comboBox(labels);
         group.setSelectedIndex(0);
 
