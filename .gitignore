@@ -1,0 +1,11 @@
+# Build & bytecode
+out/
+*.class
+
+# IDE files
+.idea/
+*.iml
+.DS_Store
+
+# Tiles cache
+data/tiles/
