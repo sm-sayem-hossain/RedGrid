@@ -165,28 +165,46 @@ public class Dashboard extends JFrame {
     // ---------- request tab ----------
 
     private JPanel requestTab() {
-        JComboBox<String> group = Theme.comboBox(new String[]{"O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+"});
-        group.setSelectedItem(me.getBloodGroup().label());
+        String[] labels = new String[]{"-- Select Blood Group (রক্তের গ্রুপ) --", "O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+"};
+        JComboBox<String> group = Theme.comboBox(labels);
+        group.setSelectedIndex(0);
+
         SpinnerNumberModel bagsModel = new SpinnerNumberModel(1, 1, 10, 1);
         JSpinner bags = new JSpinner(bagsModel);
-        bags.setFont(Theme.SANS);
+        bags.setFont(Theme.sans(Font.PLAIN, 14));
+        bags.setPreferredSize(new Dimension(300, 46));
+        bags.setMaximumSize(new Dimension(Integer.MAX_VALUE, 46));
+        bags.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(Theme.LINE_STRONG, 1),
+            BorderFactory.createEmptyBorder(4, 10, 4, 10)
+        ));
 
         AddressSelectorPanel addressSelector = new AddressSelectorPanel(true, "Hospital / Clinic name");
 
-        JCheckBox urgent = new JCheckBox("Urgent (life-threatening)");
-        urgent.setFont(Theme.SANS);
+        JCheckBox urgent = new JCheckBox("Urgent (life-threatening condition)");
+        urgent.setFont(Theme.sans(Font.BOLD, 14));
         urgent.setBackground(Theme.SURFACE);
-        urgent.setForeground(Theme.INK);
-        JButton submit = Theme.button("Broadcast request", true);
+        urgent.setForeground(Theme.ACCENT);
+        JButton submit = Theme.button("Broadcast Blood Request", true);
+        submit.setPreferredSize(new Dimension(240, 48));
 
         submit.addActionListener(e -> {
+            if (group.getSelectedIndex() <= 0) {
+                ThemeKits.error(this, "Please select a valid blood group.");
+                return;
+            }
+
             redgrid.model.location.Address addr = addressSelector.getSelectedAddress();
             if (addr.getDistrict().isEmpty()) {
-                ThemeKits.error(this, "Please select a district.");
+                ThemeKits.error(this, "Please select a district (জেলা নির্বাচন করুন).");
+                return;
+            }
+            if (addr.getUpazila().isEmpty()) {
+                ThemeKits.error(this, "Please select an upazila / thana (উপজেলা নির্বাচন করুন).");
                 return;
             }
             if (addr.getHospitalOrDetail().isEmpty()) {
-                ThemeKits.error(this, "Please enter the hospital / clinic name.");
+                ThemeKits.error(this, "Please enter the hospital or clinic name.");
                 return;
             }
 
@@ -197,28 +215,28 @@ public class Dashboard extends JFrame {
 
             BloodRequest req = Store.createRequest(me, bg, n, addr, geo, urgent.isSelected());
             int matched = req.getResponses().size();
-            ThemeKits.info(this, "Request " + req.getId() + " broadcast to "
+            ThemeKits.info(this, "Request " + req.getId() + " broadcasted successfully!\nAlerted "
                     + matched + " eligible donor" + (matched == 1 ? "" : "s")
-                    + " within " + String.format("%.0f", MatchingEngine.ALERT_RADIUS_KM) + " km.");
+                    + " in " + addr.getDistrict() + ".");
             refreshRequests();
         });
 
-        JPanel form = ThemeKits.card("Emergency request");
-        form.add(Theme.label("Specify blood details and select location.",
-                Theme.sans(Font.PLAIN, 13), Theme.MUTED));
-        form.add(Box.createVerticalStrut(14));
-        ThemeKits.formRow(form, "Blood group needed", group);
-        ThemeKits.formRow(form, "Bags required", bags);
-        form.add(Box.createVerticalStrut(10));
+        JPanel form = ThemeKits.card("Emergency Blood Request");
+        form.add(Theme.label("Specify blood details and patient hospital location accurately.",
+                Theme.sans(Font.PLAIN, 14), Theme.MUTED));
+        form.add(Box.createVerticalStrut(18));
+        ThemeKits.formRow(form, "Blood Group Needed *", group);
+        ThemeKits.formRow(form, "Bags Required (1-10) *", bags);
+        form.add(Box.createVerticalStrut(8));
         form.add(addressSelector);
-        form.add(Box.createVerticalStrut(10));
-        form.add(urgent);
         form.add(Box.createVerticalStrut(14));
+        form.add(urgent);
+        form.add(Box.createVerticalStrut(18));
         form.add(submit);
 
         JPanel body = Theme.panel(Theme.BG);
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
-        body.setBorder(BorderFactory.createEmptyBorder(28, 56, 28, 56));
+        body.setBorder(BorderFactory.createEmptyBorder(28, 56, 36, 56));
         body.add(form);
         body.add(Box.createVerticalGlue());
         return wrapTab(body);
@@ -279,9 +297,16 @@ public class Dashboard extends JFrame {
     }
 
     private JPanel wrapTab(JComponent inner) {
+        JScrollPane scroll = new JScrollPane(inner);
+        scroll.setBorder(BorderFactory.createEmptyBorder());
+        scroll.getViewport().setBackground(Theme.BG);
+        scroll.getVerticalScrollBar().setUnitIncrement(16);
+        scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+
         JPanel wrap = Theme.panel(Theme.BG);
         wrap.setLayout(new BorderLayout());
-        wrap.add(inner, BorderLayout.CENTER);
+        wrap.add(scroll, BorderLayout.CENTER);
         return wrap;
     }
 

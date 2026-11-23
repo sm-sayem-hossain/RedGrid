@@ -74,39 +74,42 @@ public final class Theme {
 
     public static JTextField textField() {
         JTextField f = new JTextField();
-        f.setFont(SANS);
+        f.setFont(sans(Font.PLAIN, 14));
         f.setForeground(INK);
         f.setBackground(SURFACE);
         f.setCaretColor(INK);
         f.setBorder(fieldBorder());
-        f.setPreferredSize(new Dimension(260, 40));
+        f.setPreferredSize(new Dimension(300, 46));
+        f.setMaximumSize(new Dimension(Integer.MAX_VALUE, 46));
         return f;
     }
 
     public static JPasswordField passwordField() {
         JPasswordField f = new JPasswordField();
-        f.setFont(SANS);
+        f.setFont(sans(Font.PLAIN, 14));
         f.setForeground(INK);
         f.setBackground(SURFACE);
         f.setCaretColor(INK);
         f.setBorder(fieldBorder());
-        f.setPreferredSize(new Dimension(260, 40));
+        f.setPreferredSize(new Dimension(300, 46));
+        f.setMaximumSize(new Dimension(Integer.MAX_VALUE, 46));
         return f;
     }
 
     public static JComboBox<String> comboBox(String[] items) {
         JComboBox<String> c = new JComboBox<>(items);
-        c.setFont(SANS);
+        c.setFont(sans(Font.PLAIN, 14));
         c.setBackground(SURFACE);
         c.setForeground(INK);
         c.setBorder(fieldBorder());
-        c.setPreferredSize(new Dimension(260, 40));
+        c.setPreferredSize(new Dimension(300, 46));
+        c.setMaximumSize(new Dimension(Integer.MAX_VALUE, 46));
         return c;
     }
 
     private static javax.swing.border.Border fieldBorder() {
         return new CompoundBorder(new LineBorder(LINE_STRONG, 1, false),
-                                  new EmptyBorder(8, 12, 8, 12));
+                                  new EmptyBorder(10, 14, 10, 14));
     }
 
     /** Deck-style flat button. {@code filled} = accent, otherwise hairline outline. */
