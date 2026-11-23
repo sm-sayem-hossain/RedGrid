@@ -238,55 +238,171 @@ public class Dashboard extends JFrame {
     // ---------- profile tab ----------
 
     private JPanel profileTab() {
-        JPanel card = ThemeKits.card("Your location");
-        card.add(Theme.label("Select your area to receive nearby emergency alerts.",
-                Theme.sans(Font.PLAIN, 13), Theme.MUTED));
-        card.add(Box.createVerticalStrut(14));
+        JPanel container = Theme.panel(Theme.BG);
+        CardLayout cardLayout = new CardLayout();
+        container.setLayout(cardLayout);
 
-        AddressSelectorPanel addressSelector = new AddressSelectorPanel(false);
-        card.add(addressSelector);
-        card.add(Box.createVerticalStrut(14));
+        // --- PREVIEW MODE PANEL ---
+        JPanel previewCard = ThemeKits.card("User Profile");
 
-        JLabel currentAddressLabel = Theme.label(
-            me.getFullAddress() != null ? "Saved: " + me.getFullAddress() : "No location set yet",
-            Theme.mono(12), Theme.DIM
+        // Identity Header Box
+        JPanel idBox = Theme.panel(Theme.BG_SOFT);
+        idBox.setLayout(new BorderLayout());
+        idBox.setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
+
+        JLabel bloodBadge = Theme.label(me.getBloodGroup().label(), Theme.display(Font.BOLD, 28), Theme.ACCENT);
+        bloodBadge.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 18));
+        idBox.add(bloodBadge, BorderLayout.WEST);
+
+        JLabel nameLabel = Theme.label(me.getName(), Theme.sans(Font.BOLD, 18), Theme.INK);
+        JLabel metaLabel = Theme.label("ID: " + me.getId() + "  ·  Phone: " + me.getPhone() + "  ·  Role: " + me.getRole(),
+                Theme.mono(12), Theme.DIM);
+        JPanel nameBox = Theme.panel(Theme.BG_SOFT);
+        nameBox.setLayout(new BoxLayout(nameBox, BoxLayout.Y_AXIS));
+        nameBox.add(nameLabel);
+        nameBox.add(Box.createVerticalStrut(4));
+        nameBox.add(metaLabel);
+        idBox.add(nameBox, BorderLayout.CENTER);
+        previewCard.add(idBox);
+        previewCard.add(Box.createVerticalStrut(20));
+
+        // Details Section
+        JLabel pName = Theme.label("Full Name:  " + me.getName(), Theme.sans(Font.PLAIN, 14), Theme.INK);
+        JLabel pPhone = Theme.label("Phone Number:  " + me.getPhone(), Theme.sans(Font.PLAIN, 14), Theme.INK);
+        JLabel pBlood = Theme.label("Blood Group:  " + me.getBloodGroup().label(), Theme.sans(Font.PLAIN, 14), Theme.INK);
+        JLabel pAddress = Theme.label(
+            "Registered Location:  " + (me.getFullAddress() != null ? me.getFullAddress().toString() : "No location set yet"),
+            Theme.sans(Font.PLAIN, 14), Theme.INK
         );
-        card.add(currentAddressLabel);
-        card.add(Box.createVerticalStrut(14));
+        JLabel pStatus = Theme.label(
+            "Donation Status:  " + (me.isEligible() ? "Eligible to Donate" : ("Cooldown (" + me.daysUntilEligible() + " days left)")),
+            Theme.sans(Font.BOLD, 14),
+            me.isEligible() ? Theme.SUCCESS : Theme.ACCENT
+        );
 
-        JButton save = Theme.button("Save location", true);
-        save.addActionListener(e -> {
-            redgrid.model.location.Address addr = addressSelector.getSelectedAddress();
-            if (addr.getDistrict().isEmpty()) {
-                ThemeKits.error(this, "Please select a district.");
+        previewCard.add(pName);
+        previewCard.add(Box.createVerticalStrut(10));
+        previewCard.add(pPhone);
+        previewCard.add(Box.createVerticalStrut(10));
+        previewCard.add(pBlood);
+        previewCard.add(Box.createVerticalStrut(10));
+        previewCard.add(pAddress);
+        previewCard.add(Box.createVerticalStrut(10));
+        previewCard.add(pStatus);
+        previewCard.add(Box.createVerticalStrut(24));
+
+        JButton editBtn = Theme.button("Edit Profile", true);
+        editBtn.setPreferredSize(new Dimension(150, 42));
+        previewCard.add(editBtn);
+
+        JPanel previewBody = Theme.panel(Theme.BG);
+        previewBody.setLayout(new BoxLayout(previewBody, BoxLayout.Y_AXIS));
+        previewBody.setBorder(BorderFactory.createEmptyBorder(28, 56, 36, 56));
+        previewBody.add(previewCard);
+        previewBody.add(Box.createVerticalGlue());
+
+        // --- EDIT MODE PANEL ---
+        JPanel editCard = ThemeKits.card("Edit Profile");
+        editCard.add(Theme.label("Update your personal details and location.", Theme.sans(Font.PLAIN, 13), Theme.MUTED));
+        editCard.add(Box.createVerticalStrut(16));
+
+        JTextField nameField = Theme.textField();
+        nameField.setText(me.getName());
+
+        JTextField phoneField = Theme.textField();
+        phoneField.setText(me.getPhone());
+
+        String[] groups = new String[]{"O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+"};
+        JComboBox<String> bloodCombo = Theme.comboBox(groups);
+        bloodCombo.setSelectedItem(me.getBloodGroup().label());
+
+        ThemeKits.formRow(editCard, "Full Name *", nameField);
+        ThemeKits.formRow(editCard, "Phone Number *", phoneField);
+        ThemeKits.formRow(editCard, "Blood Group *", bloodCombo);
+
+        editCard.add(Box.createVerticalStrut(6));
+        AddressSelectorPanel addressSelector = new AddressSelectorPanel(false);
+        editCard.add(addressSelector);
+        editCard.add(Box.createVerticalStrut(20));
+
+        JButton saveBtn = Theme.button("Save Changes", true);
+        saveBtn.setPreferredSize(new Dimension(150, 42));
+
+        JButton cancelBtn = Theme.button("Cancel", false);
+        cancelBtn.setPreferredSize(new Dimension(120, 42));
+
+        JPanel btnRow = Theme.panel(Theme.SURFACE);
+        btnRow.setLayout(new FlowLayout(FlowLayout.LEFT, 12, 0));
+        btnRow.add(saveBtn);
+        btnRow.add(cancelBtn);
+        editCard.add(btnRow);
+
+        JPanel editBody = Theme.panel(Theme.BG);
+        editBody.setLayout(new BoxLayout(editBody, BoxLayout.Y_AXIS));
+        editBody.setBorder(BorderFactory.createEmptyBorder(28, 56, 36, 56));
+        editBody.add(editCard);
+        editBody.add(Box.createVerticalGlue());
+
+        // Switch to Edit Mode
+        editBtn.addActionListener(e -> {
+            nameField.setText(me.getName());
+            phoneField.setText(me.getPhone());
+            bloodCombo.setSelectedItem(me.getBloodGroup().label());
+            cardLayout.show(container, "edit");
+        });
+
+        // Cancel
+        cancelBtn.addActionListener(e -> cardLayout.show(container, "preview"));
+
+        // Save
+        saveBtn.addActionListener(e -> {
+            String newName = nameField.getText().trim();
+            String newPhone = phoneField.getText().trim();
+            if (newName.isEmpty()) {
+                ThemeKits.error(this, "Name cannot be empty.");
                 return;
             }
-            redgrid.model.location.District d = addressSelector.getSelectedDistrict();
-            if (d != null && d.getLat() != 0) {
-                me.setLocation(new GeoPoint(d.getLat(), d.getLon()));
+            if (!newPhone.matches("^01[3-9]\\d{8}$")) {
+                ThemeKits.error(this, "Phone must be a valid 11-digit Bangladeshi number (e.g. 01712345678).");
+                return;
             }
-            me.setDistrict(addr.getDistrict());
-            me.setFullAddress(addr);
+
+            BloodGroup newBg = BloodGroup.fromLabel((String) bloodCombo.getSelectedItem());
+            me.setName(newName);
+            me.setPhone(newPhone);
+            me.setBloodGroup(newBg);
+
+            redgrid.model.location.Address addr = addressSelector.getSelectedAddress();
+            if (addr != null && !addr.getDistrict().isEmpty()) {
+                me.setDistrict(addr.getDistrict());
+                me.setFullAddress(addr);
+                redgrid.model.location.District d = addressSelector.getSelectedDistrict();
+                if (d != null && d.getLat() != 0) {
+                    me.setLocation(new GeoPoint(d.getLat(), d.getLon()));
+                }
+            }
+
             Store.saveUsers();
-            currentAddressLabel.setText("Saved: " + addr);
             refreshStatus();
-            ThemeKits.info(this, "Location saved! You will receive alerts for " + addr.getDistrict() + ".");
+
+            // Update preview labels
+            nameLabel.setText(me.getName());
+            metaLabel.setText("ID: " + me.getId() + "  ·  Phone: " + me.getPhone() + "  ·  Role: " + me.getRole());
+            bloodBadge.setText(me.getBloodGroup().label());
+            pName.setText("Full Name:  " + me.getName());
+            pPhone.setText("Phone Number:  " + me.getPhone());
+            pBlood.setText("Blood Group:  " + me.getBloodGroup().label());
+            pAddress.setText("Registered Location:  " + (me.getFullAddress() != null ? me.getFullAddress().toString() : "No location set yet"));
+
+            ThemeKits.info(this, "Profile updated successfully!");
+            cardLayout.show(container, "preview");
         });
-        card.add(save);
-        card.add(Box.createVerticalStrut(16));
 
-        JPanel metaRow = Theme.panel(Theme.SURFACE);
-        metaRow.setLayout(new FlowLayout(FlowLayout.LEFT, 24, 4));
-        metaRow.add(Theme.label("Name  " + me.getName(), Theme.mono(12), Theme.INK));
-        metaRow.add(Theme.label("Phone  " + me.getPhone(), Theme.mono(12), Theme.INK));
-        metaRow.add(Theme.label("Blood group  " + me.getBloodGroup(), Theme.mono(12), Theme.INK));
-        card.add(metaRow);
+        container.add(previewBody, "preview");
+        container.add(editBody, "edit");
+        cardLayout.show(container, "preview");
 
-        JPanel body = Theme.panel(Theme.BG);
-        body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
-        body.setBorder(BorderFactory.createEmptyBorder(28, 56, 28, 56));
-        body.add(card);
-        return wrapTab(body);
+        return wrapTab(container);
     }
 
     private JPanel wrapTab(JComponent inner) {
