@@ -21,14 +21,19 @@ public class Dashboard extends JFrame {
     private static final DateTimeFormatter FMT_TIME = DateTimeFormatter.ofPattern("MMM d, HH:mm");
 
     private final Donor me;
-    private final JLabel eligibility = Theme.label("", Theme.display(Font.BOLD, 30), Theme.INK);
-    private final JLabel cooldownMeta = Theme.label("", Theme.mono(11), Theme.DIM);
+    private final JLabel statDonorStatus = Theme.label("", Theme.sans(Font.BOLD, 16), Theme.INK);
+    private final JLabel statDonorSubtitle = Theme.label("", Theme.mono(11), Theme.MUTED);
+    private final JLabel statAlertCount = Theme.label("0", Theme.display(Font.BOLD, 22), Theme.ACCENT);
+    private final JLabel statReqCount = Theme.label("0", Theme.display(Font.BOLD, 22), Theme.INK);
+    private final JLabel statReqSubtitle = Theme.label("No active requests", Theme.mono(11), Theme.MUTED);
+
     private final DefaultListModel<String> myRequests = new DefaultListModel<>();
     private final DefaultListModel<String> alertLog = new DefaultListModel<>();
     private final DefaultListModel<String> pendingModel = new DefaultListModel<>();
     private final java.util.Map<String, BloodRequest> pendingById = new java.util.LinkedHashMap<>();
     private final JList<String> pendingList = new JList<>(pendingModel);
-    private final JLabel coordLabel = Theme.label("No location set — tap the map", Theme.mono(12), Theme.DIM);
+    private final JList<String> myReqList = new JList<>(myRequests);
+    private final JList<String> historyList = new JList<>(alertLog);
 
     public Dashboard(Donor me) {
         super("RedGrid — Dashboard");
@@ -59,103 +64,175 @@ public class Dashboard extends JFrame {
 
     // ---------- overview ----------
 
+    private JPanel createMetricCard(String kicker, JComponent primary, JComponent secondary) {
+        JPanel card = Theme.panel(Theme.SURFACE);
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(Theme.LINE, 1),
+            BorderFactory.createEmptyBorder(16, 18, 16, 18)));
+        card.add(Theme.kicker(kicker));
+        card.add(Box.createVerticalStrut(10));
+        primary.setAlignmentX(Component.LEFT_ALIGNMENT);
+        card.add(primary);
+        card.add(Box.createVerticalStrut(4));
+        secondary.setAlignmentX(Component.LEFT_ALIGNMENT);
+        card.add(secondary);
+        return card;
+    }
+
     private JPanel overviewTab() {
         JPanel body = Theme.panel(Theme.BG);
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
-        body.setBorder(BorderFactory.createEmptyBorder(28, 56, 28, 56));
+        body.setBorder(BorderFactory.createEmptyBorder(24, 48, 32, 48));
 
-        JPanel status = ThemeKits.card("Cooldown indicator");
-        status.add(eligibility);
-        status.add(Box.createVerticalStrut(6));
-        status.add(cooldownMeta);
-        status.add(Box.createVerticalStrut(14));
-        status.add(Theme.label(
-            "A mandatory 90-day recovery interval protects donor health between donations.",
-            Theme.sans(Font.PLAIN, 13), Theme.MUTED));
-        body.add(status);
+        // 1. Top Metric Cards (3 columns)
+        JPanel statsGrid = Theme.panel(Theme.BG);
+        statsGrid.setLayout(new GridLayout(1, 3, 16, 0));
+        statsGrid.setAlignmentX(Component.LEFT_ALIGNMENT);
+        statsGrid.setMaximumSize(new Dimension(Integer.MAX_VALUE, 115));
+
+        JPanel donorCard = createMetricCard("DONOR PROFILE", statDonorStatus, statDonorSubtitle);
+        JPanel alertCountCard = createMetricCard("ACTIVE ALERTS NEAR YOU", statAlertCount,
+                Theme.label("Within 25 km compatible radius", Theme.mono(11), Theme.MUTED));
+        JPanel reqCountCard = createMetricCard("MY BLOOD REQUESTS", statReqCount, statReqSubtitle);
+
+        statsGrid.add(donorCard);
+        statsGrid.add(alertCountCard);
+        statsGrid.add(reqCountCard);
+
+        body.add(statsGrid);
         body.add(Box.createVerticalStrut(20));
 
-        JPanel alerts = ThemeKits.card("Emergency alerts near you");
+        // 2. Urgent Live Alerts Section
+        JPanel alertsCard = ThemeKits.card("EMERGENCY REQUESTS NEAR YOU");
+        alertsCard.setAlignmentX(Component.LEFT_ALIGNMENT);
+
         pendingList.setFont(Theme.mono(12));
         pendingList.setBackground(Theme.SURFACE);
         pendingList.setForeground(Theme.INK);
         pendingList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        JScrollPane scroll = new JScrollPane(pendingList);
-        scroll.setPreferredSize(new Dimension(760, 130));
-        scroll.setBorder(BorderFactory.createLineBorder(Theme.LINE));
-        alerts.add(Theme.label("Compatible requests within "
-                + String.format("%.0f", MatchingEngine.ALERT_RADIUS_KM)
-                + " km — select one, then Accept.", Theme.sans(Font.PLAIN, 13), Theme.MUTED));
-        alerts.add(Box.createVerticalStrut(10));
-        alerts.add(scroll);
-        alerts.add(Box.createVerticalStrut(12));
+        JScrollPane scrollAlerts = new JScrollPane(pendingList);
+        scrollAlerts.setPreferredSize(new Dimension(760, 115));
+        scrollAlerts.setMaximumSize(new Dimension(Integer.MAX_VALUE, 130));
+        scrollAlerts.setBorder(BorderFactory.createLineBorder(Theme.LINE));
+        forwardMouseWheel(scrollAlerts);
 
-        JButton accept = Theme.button("Accept", true);
-        accept.addActionListener(e -> actOnSelected(true));
-        alerts.add(ThemeKits.row(accept));
+        JPanel alertActionRow = Theme.panel(Theme.SURFACE);
+        alertActionRow.setLayout(new FlowLayout(FlowLayout.LEFT, 12, 0));
+        alertActionRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JButton acceptBtn = Theme.button("Accept Selected Request", true);
+        acceptBtn.setPreferredSize(new Dimension(200, 38));
+        acceptBtn.addActionListener(e -> actOnSelected(true));
+        alertActionRow.add(acceptBtn);
+        JLabel alertHelp = Theme.label("Select a request above to respond as a donor.", Theme.sans(Font.PLAIN, 12), Theme.MUTED);
+        alertActionRow.add(alertHelp);
 
-        alerts.add(Box.createVerticalStrut(16));
-        alerts.add(Theme.label("History", Theme.mono(10), Theme.DIM));
-        alerts.add(Box.createVerticalStrut(8));
-        JList<String> history = new JList<>(alertLog);
-        history.setFont(Theme.mono(12));
-        history.setBackground(Theme.SURFACE);
-        history.setForeground(Theme.INK);
-        JScrollPane histScroll = new JScrollPane(history);
-        histScroll.setPreferredSize(new Dimension(760, 110));
-        histScroll.setBorder(BorderFactory.createLineBorder(Theme.LINE));
-        alerts.add(histScroll);
-        body.add(alerts);
+        alertsCard.add(scrollAlerts);
+        alertsCard.add(Box.createVerticalStrut(12));
+        alertsCard.add(alertActionRow);
 
-        JPanel reqCard = ThemeKits.card("My requests");
-        JList<String> reqList = new JList<>(myRequests);
-        reqList.setFont(Theme.mono(12));
-        reqList.setBackground(Theme.SURFACE);
-        reqList.setForeground(Theme.INK);
-        JScrollPane reqScroll = new JScrollPane(reqList);
-        reqScroll.setPreferredSize(new Dimension(760, 140));
-        reqScroll.setBorder(BorderFactory.createLineBorder(Theme.LINE));
-        reqCard.add(reqScroll);
+        body.add(alertsCard);
         body.add(Box.createVerticalStrut(20));
-        body.add(reqCard);
+
+        // 3. Two Column Section (My Posted Requests + Activity / Cooldown)
+        JPanel twoCol = Theme.panel(Theme.BG);
+        twoCol.setLayout(new GridLayout(1, 2, 16, 0));
+        twoCol.setAlignmentX(Component.LEFT_ALIGNMENT);
+        twoCol.setMaximumSize(new Dimension(Integer.MAX_VALUE, 260));
+
+        // Left Col: My Requests
+        JPanel myReqCard = ThemeKits.card("MY POSTED REQUESTS");
+        myReqList.setFont(Theme.mono(12));
+        myReqList.setBackground(Theme.SURFACE);
+        myReqList.setForeground(Theme.INK);
+        JScrollPane myReqScroll = new JScrollPane(myReqList);
+        myReqScroll.setPreferredSize(new Dimension(360, 140));
+        myReqScroll.setBorder(BorderFactory.createLineBorder(Theme.LINE));
+        forwardMouseWheel(myReqScroll);
+        myReqCard.add(myReqScroll);
+
+        // Right Col: Activity / Cooldown History
+        JPanel historyCard = ThemeKits.card("ACTIVITY & DONATION LOG");
+        historyList.setFont(Theme.mono(12));
+        historyList.setBackground(Theme.SURFACE);
+        historyList.setForeground(Theme.INK);
+        JScrollPane histScroll = new JScrollPane(historyList);
+        histScroll.setPreferredSize(new Dimension(360, 140));
+        histScroll.setBorder(BorderFactory.createLineBorder(Theme.LINE));
+        forwardMouseWheel(histScroll);
+        historyCard.add(histScroll);
+
+        twoCol.add(myReqCard);
+        twoCol.add(historyCard);
+
+        body.add(twoCol);
+        body.add(Box.createVerticalStrut(20));
 
         return wrapTab(body);
     }
 
+    private void forwardMouseWheel(JScrollPane childScroll) {
+        childScroll.addMouseWheelListener(e -> {
+            JScrollPane parent = (JScrollPane) SwingUtilities.getAncestorOfClass(JScrollPane.class, childScroll);
+            if (parent != null) {
+                // If child cannot scroll further in that direction, dispatch to parent scrollpane
+                JScrollBar bar = childScroll.getVerticalScrollBar();
+                int val = bar.getValue();
+                int min = bar.getMinimum();
+                int max = bar.getMaximum() - bar.getVisibleAmount();
+                if ((e.getWheelRotation() < 0 && val <= min) || (e.getWheelRotation() > 0 && val >= max)) {
+                    parent.dispatchEvent(SwingUtilities.convertMouseEvent(childScroll, e, parent));
+                }
+            }
+        });
+    }
+
     private void refreshStatus() {
-        if (me.getLocation() == null) {
-            eligibility.setText("Set your location");
-            eligibility.setForeground(Theme.ACCENT);
-            cooldownMeta.setText("Blood group " + me.getBloodGroup()
-                + " · no location set — Profile tab");
+        if (!me.isAvailableAsDonor()) {
+            statDonorStatus.setText(me.getBloodGroup().label() + " · Alerts Disabled");
+            statDonorStatus.setForeground(Theme.DIM);
+            statDonorSubtitle.setText("Enable 'Available as Donor' in Profile tab");
             return;
         }
+
+        if (me.getLocation() == null) {
+            statDonorStatus.setText(me.getBloodGroup().label() + " · Location Needed");
+            statDonorStatus.setForeground(Theme.ACCENT);
+            statDonorSubtitle.setText("Set your district/upazila in Profile tab");
+            return;
+        }
+
         if (me.isEligible()) {
-            eligibility.setText("Eligible to donate");
-            eligibility.setForeground(Theme.SUCCESS);
-            cooldownMeta.setText("Blood group " + me.getBloodGroup()
-                + (me.getLastDonation() == null
-                    ? " · no donation logged yet"
-                    : " · last donation " + FMT.format(me.getLastDonation()))
-                + " · " + me.getLocation());
+            statDonorStatus.setText(me.getBloodGroup().label() + " · Eligible to Donate");
+            statDonorStatus.setForeground(Theme.SUCCESS);
+            statDonorSubtitle.setText(me.getLastDonation() == null
+                ? "Ready for emergency calls"
+                : "Last donated " + FMT.format(me.getLastDonation()));
         } else {
-            eligibility.setText("Resting — " + me.daysUntilEligible() + " days left");
-            eligibility.setForeground(Theme.ACCENT);
-            cooldownMeta.setText("Blood group " + me.getBloodGroup()
-                + " · last donation " + FMT.format(me.getLastDonation())
-                + " · 90-day recovery in progress · " + me.getLocation());
+            statDonorStatus.setText(me.getBloodGroup().label() + " · Resting (" + me.daysUntilEligible() + "d left)");
+            statDonorStatus.setForeground(Theme.ACCENT);
+            statDonorSubtitle.setText("90-day recovery active · " + me.getDistrict());
         }
     }
 
     private void refreshRequests() {
         myRequests.clear();
+        int activeCount = 0;
         for (BloodRequest r : Store.getRequests()) {
             if (!r.getRecipientId().equals(me.getId())) continue;
-            String flag = r.isUrgent() ? "URGENT" : "      ";
-            myRequests.addElement(String.format("%s  %s  %s x%d  %s, %s  |  %s  |  accepted %d/%d",
+            activeCount++;
+            String flag = r.isUrgent() ? "URGENT" : "NORMAL";
+            myRequests.addElement(String.format("%s [%s] %s x%d  %s | %s (%d/%d)",
                 r.getId(), flag, r.getBloodGroup(), r.getBags(),
-                r.getHospital(), r.getDistrict(),
-                r.getStatus(), r.acceptedCount(), r.getBags()));
+                r.getHospital(), r.getStatus(), r.acceptedCount(), r.getBags()));
+        }
+        if (myRequests.isEmpty()) {
+            myRequests.addElement("No requests posted by you.");
+            statReqCount.setText("0");
+            statReqSubtitle.setText("All requests fulfilled or none posted");
+        } else {
+            statReqCount.setText(String.valueOf(activeCount));
+            statReqSubtitle.setText(activeCount + " request(s) on record");
         }
     }
 
@@ -443,7 +520,7 @@ public class Dashboard extends JFrame {
         JScrollPane scroll = new JScrollPane(inner);
         scroll.setBorder(BorderFactory.createEmptyBorder());
         scroll.getViewport().setBackground(Theme.BG);
-        scroll.getVerticalScrollBar().setUnitIncrement(16);
+        scroll.getVerticalScrollBar().setUnitIncrement(24);
         scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
 
@@ -459,6 +536,7 @@ public class Dashboard extends JFrame {
     public void refreshAlerts() {
         pendingModel.clear();
         pendingById.clear();
+        int alertCount = 0;
         for (BloodRequest req : Store.getRequests()) {
             if (req.getStatus() != BloodRequest.Status.OPEN) continue;
             if (req.responseOf(me.getId()) != BloodRequest.Response.PENDING) continue;
@@ -466,13 +544,15 @@ public class Dashboard extends JFrame {
             if (me.getLocation() == null || req.getLocation() == null) continue;
             double km = MatchingEngine.distanceKm(me, req);
             pendingById.put(req.getId(), req);
+            alertCount++;
             pendingModel.addElement(String.format("%s  %s%s x%d  %s, %s  ·  %.1f km  ·  %s",
                 req.getId(), req.isUrgent() ? "URGENT " : "", req.getBloodGroup(),
                 req.getBags(), req.getHospital(), req.getDistrict(), km,
                 req.getRecipientName()));
         }
+        statAlertCount.setText(String.valueOf(alertCount));
         if (pendingModel.isEmpty())
-            pendingModel.addElement("No pending alerts right now.");
+            pendingModel.addElement("No emergency alerts near you right now.");
     }
 
     private void actOnSelected(boolean accept) {
