@@ -24,6 +24,7 @@ public class BloodRequest implements Serializable {
     private final String hospital;
     private final String district;
     private final GeoPoint location;
+    private redgrid.model.location.Address fullAddress;
     private final boolean urgent;
     private final LocalDateTime createdAt;
     private Status status = Status.OPEN;
@@ -32,6 +33,12 @@ public class BloodRequest implements Serializable {
 
     public BloodRequest(String id, User requester, BloodGroup bloodGroup, int bags,
                         String hospital, String district, GeoPoint location, boolean urgent) {
+        this(id, requester, bloodGroup, bags, hospital, district, location, null, urgent);
+    }
+
+    public BloodRequest(String id, User requester, BloodGroup bloodGroup, int bags,
+                        String hospital, String district, GeoPoint location,
+                        redgrid.model.location.Address fullAddress, boolean urgent) {
         this.id = id;
         this.recipientId = requester.getId();
         this.recipientName = requester.getName();
@@ -40,6 +47,7 @@ public class BloodRequest implements Serializable {
         this.hospital = hospital;
         this.district = district;
         this.location = location;
+        this.fullAddress = fullAddress;
         this.urgent = urgent;
         this.createdAt = LocalDateTime.now();
     }
@@ -52,6 +60,7 @@ public class BloodRequest implements Serializable {
     public String getHospital()      { return hospital; }
     public String getDistrict()      { return district; }
     public GeoPoint getLocation()    { return location; }
+    public redgrid.model.location.Address getFullAddress() { return fullAddress; }
     public boolean isUrgent()        { return urgent; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public Status getStatus()        { return status; }

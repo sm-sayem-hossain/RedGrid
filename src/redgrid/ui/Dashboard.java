@@ -170,7 +170,9 @@ public class Dashboard extends JFrame {
         SpinnerNumberModel bagsModel = new SpinnerNumberModel(1, 1, 10, 1);
         JSpinner bags = new JSpinner(bagsModel);
         bags.setFont(Theme.SANS);
-        JComboBox<String> location = Theme.comboBox(LocationCatalog.names());
+
+        AddressSelectorPanel addressSelector = new AddressSelectorPanel(true, "Hospital / Clinic name");
+
         JCheckBox urgent = new JCheckBox("Urgent (life-threatening)");
         urgent.setFont(Theme.SANS);
         urgent.setBackground(Theme.SURFACE);
@@ -178,14 +180,22 @@ public class Dashboard extends JFrame {
         JButton submit = Theme.button("Broadcast request", true);
 
         submit.addActionListener(e -> {
-            if (me.getLocation() == null) {
-                ThemeKits.error(this, "Set your location in the Profile tab first.");
+            redgrid.model.location.Address addr = addressSelector.getSelectedAddress();
+            if (addr.getDistrict().isEmpty()) {
+                ThemeKits.error(this, "Please select a district.");
                 return;
             }
+            if (addr.getHospitalOrDetail().isEmpty()) {
+                ThemeKits.error(this, "Please enter the hospital / clinic name.");
+                return;
+            }
+
             BloodGroup bg = BloodGroup.fromLabel((String) group.getSelectedItem());
             int n = (Integer) bags.getValue();
-            LocationCatalog.Place place = LocationCatalog.byName((String) location.getSelectedItem());
-            BloodRequest req = Store.createRequest(me, bg, n, place, urgent.isSelected());
+            redgrid.model.location.District d = addressSelector.getSelectedDistrict();
+            GeoPoint geo = (d != null && d.getLat() != 0) ? new GeoPoint(d.getLat(), d.getLon()) : me.getLocation();
+
+            BloodRequest req = Store.createRequest(me, bg, n, addr, geo, urgent.isSelected());
             int matched = req.getResponses().size();
             ThemeKits.info(this, "Request " + req.getId() + " broadcast to "
                     + matched + " eligible donor" + (matched == 1 ? "" : "s")
@@ -194,12 +204,14 @@ public class Dashboard extends JFrame {
         });
 
         JPanel form = ThemeKits.card("Emergency request");
-        form.add(Theme.label("Select the hospital where blood is needed.",
+        form.add(Theme.label("Specify blood details and select location.",
                 Theme.sans(Font.PLAIN, 13), Theme.MUTED));
         form.add(Box.createVerticalStrut(14));
         ThemeKits.formRow(form, "Blood group needed", group);
         ThemeKits.formRow(form, "Bags required", bags);
-        ThemeKits.formRow(form, "Hospital", location);
+        form.add(Box.createVerticalStrut(10));
+        form.add(addressSelector);
+        form.add(Box.createVerticalStrut(10));
         form.add(urgent);
         form.add(Box.createVerticalStrut(14));
         form.add(submit);
@@ -216,11 +228,41 @@ public class Dashboard extends JFrame {
 
     private JPanel profileTab() {
         JPanel card = ThemeKits.card("Your location");
-        card.add(Theme.label("Location configuration will be updated here.",
+        card.add(Theme.label("Select your area to receive nearby emergency alerts.",
                 Theme.sans(Font.PLAIN, 13), Theme.MUTED));
         card.add(Box.createVerticalStrut(14));
-        card.add(coordLabel);
+
+        AddressSelectorPanel addressSelector = new AddressSelectorPanel(false);
+        card.add(addressSelector);
         card.add(Box.createVerticalStrut(14));
+
+        JLabel currentAddressLabel = Theme.label(
+            me.getFullAddress() != null ? "Saved: " + me.getFullAddress() : "No location set yet",
+            Theme.mono(12), Theme.DIM
+        );
+        card.add(currentAddressLabel);
+        card.add(Box.createVerticalStrut(14));
+
+        JButton save = Theme.button("Save location", true);
+        save.addActionListener(e -> {
+            redgrid.model.location.Address addr = addressSelector.getSelectedAddress();
+            if (addr.getDistrict().isEmpty()) {
+                ThemeKits.error(this, "Please select a district.");
+                return;
+            }
+            redgrid.model.location.District d = addressSelector.getSelectedDistrict();
+            if (d != null && d.getLat() != 0) {
+                me.setLocation(new GeoPoint(d.getLat(), d.getLon()));
+            }
+            me.setDistrict(addr.getDistrict());
+            me.setFullAddress(addr);
+            Store.saveUsers();
+            currentAddressLabel.setText("Saved: " + addr);
+            refreshStatus();
+            ThemeKits.info(this, "Location saved! You will receive alerts for " + addr.getDistrict() + ".");
+        });
+        card.add(save);
+        card.add(Box.createVerticalStrut(16));
 
         JPanel metaRow = Theme.panel(Theme.SURFACE);
         metaRow.setLayout(new FlowLayout(FlowLayout.LEFT, 24, 4));

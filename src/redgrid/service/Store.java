@@ -161,6 +161,23 @@ public final class Store {
         return req;
     }
 
+    /** Creates a request with cascading address, runs matching engine and alerts donors. */
+    public static BloodRequest createRequest(User requester, BloodGroup group, int bags,
+                                             redgrid.model.location.Address addr,
+                                             GeoPoint geo, boolean urgent) {
+        String hospital = addr.getHospitalOrDetail().isEmpty() ? "Hospital" : addr.getHospitalOrDetail();
+        BloodRequest req = new BloodRequest(nextRequestId(), requester, group, bags,
+                hospital, addr.getDistrict(), geo, addr, urgent);
+        List<Donor> matches = MatchingEngine.findDonors(req);
+        for (Donor d : matches) {
+            if (d.getId().equals(requester.getId())) continue;
+            req.addAlertedDonor(d.getId());
+        }
+        requests.add(req);
+        saveRequests();
+        return req;
+    }
+
     /** Registers a donor's accept/decline decision; a fulfilled request closes. */
     public static void setResponse(BloodRequest req, Donor donor, BloodRequest.Response resp) {
         req.getResponses().put(donor.getId(), resp);

@@ -18,6 +18,7 @@ public abstract class User implements Serializable {
     private String password;
     private String district;
     private GeoPoint location;
+    private redgrid.model.location.Address fullAddress;
     private Role role;
 
     protected User(String id, String name, String phone, String password, String district, Role role) {
@@ -45,6 +46,8 @@ public abstract class User implements Serializable {
     public void setPhone(String phone)       { this.phone = phone; }
     public void setDistrict(String district) { this.district = district; }
     public void setLocation(GeoPoint location) { this.location = location; }
+    public redgrid.model.location.Address getFullAddress() { return fullAddress; }
+    public void setFullAddress(redgrid.model.location.Address fullAddress) { this.fullAddress = fullAddress; }
 
     /** Returns true when the given plain-text password matches this account. */
     public boolean checkPassword(String attempt) { return password != null && password.equals(attempt); }
